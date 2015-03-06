@@ -9,6 +9,7 @@ import controller
 import model
 import tasks
 import sys
+import cPickle
 np.random.seed(1234)
 
 def make_train(input_size,output_size,mem_size,mem_width,hidden_sizes=[100]):
@@ -54,19 +55,22 @@ if __name__ == "__main__":
 	test_score = 0.
 	score = None
 	alpha = 0.95
+	scores = []
 	for counter in xrange(max_sequences):
 		length = np.random.randint(int(20 * (min(counter,50000)/float(50000))**2) +1) + 1
 		i,o = tasks.copy(8,length)
 		if score == None: score = train(i,o)
 		else: score = alpha * score + (1 - alpha) * train(i,o)
 		print "round:", counter, "score:", score
+		scores.append(score)
 		if score < best_score:
 			# improve patience if loss improvement is good enough
 			if score < best_score * improvement_threshold:
 				patience = max(patience, counter * patience_increase)
 			P.save(model_out)
 			best_score = score
+			cPickle.dump(scores, open('scores.pkl', 'wb'), cPickle.HIGHEST_PROTOCOL)
 		
 		if patience <= counter: break
-
-
+	
+	cPickle.dumps(scores, open('scores.pkl', 'wb'), cPickle.HIGHEST_PROTOCOL)
